@@ -7,9 +7,6 @@ import (
 	"strconv"
 )
 
-// any number adjacent to a symbol, even diagonally, is a "part number"
-// (Periods (.) do not count as a symbol.)
-
 type Node struct {
 	value    rune
 	digit    bool
@@ -106,7 +103,6 @@ func p2(scanner bufio.Scanner) {
 				if ok {
 					known, _ := strconv.Atoi(existing)
 					current, _ := strconv.Atoi(number)
-					fmt.Println(known, current)
 					gearSum = gearSum + (known * current)
 				} else {
 					numbersWithSymbol[pair] = number
