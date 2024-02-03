@@ -11,11 +11,10 @@ import (
 // (Periods (.) do not count as a symbol.)
 
 type Node struct {
-	next      *Node
-	value     rune
-	digit     bool
-	hasSymbol bool
-	symbolAt  []Pair
+	next     *Node
+	value    rune
+	digit    bool
+	symbolAt []Pair
 }
 
 type List struct {
@@ -31,8 +30,8 @@ func main() {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	//p1(*scanner)
-	p2(*scanner)
+	p1(*scanner)
+	// p2(*scanner)
 }
 
 func p1(scanner bufio.Scanner) {
@@ -45,26 +44,15 @@ func p1(scanner bufio.Scanner) {
 		}
 		result = append(result, row)
 	}
-	total := len(result)
 	// Create list of nodes
 	sl := List{}
 	for i, row := range result {
-		var previous_row []rune
-		var next_row []rune
-		prev := i - 1
-		next := i + 1
-		if prev >= 1 {
-			previous_row = result[prev]
-		}
-		if next <= total-1 {
-			next_row = result[next]
-		}
 
 		for col, t := range row {
 			var n Node
-			hasSymbol := hasSymbolNeighour(previous_row, next_row, row, col, i, total)
+			symbolAt := symbolNeigbours(result, i, col)
 			digit := runeIsNumber(t)
-			n = Node{hasSymbol: hasSymbol, value: t, digit: digit, next: nil}
+			n = Node{symbolAt: symbolAt, value: t, digit: digit, next: nil}
 			if sl.head == nil {
 				sl.head = &n
 			} else {
@@ -81,13 +69,12 @@ func p1(scanner bufio.Scanner) {
 	number := ""
 	hasSymbol := false
 	sum := 0
-	// 4361
 	for p != nil {
 		// when digit, get the chain, and then skip until no digit
 		if p.digit {
 			number += string(p.value)
-			if hasSymbol == false && p.hasSymbol == true {
-				hasSymbol = p.hasSymbol
+			if hasSymbol == false && len(p.symbolAt) > 0 {
+				hasSymbol = true
 			}
 		} else {
 			// End of chain. Probably, check if any symbol, if so sum
@@ -187,49 +174,6 @@ func getUniquePairs(pairs []Pair) []Pair {
 		}
 	}
 	return unique
-}
-
-func hasSymbolNeighour(prev_row []rune, next_row []rune, row []rune, current_col int, current_row int, total int) bool {
-	// col-1/row-1, col/row-1, col+1/row-1
-	// col-1/row, col/row, col+1/row
-	// col-1/row+1, col/row+1, col+1/row+1
-	var crl, crr rune
-	var nrl, nrc, nrr rune
-	var prl, prc, prr rune
-
-	if current_row == total && total == 1 {
-		crl, _, crr = vals_for_row(current_col, row)
-		return isAnySymbol([]rune{crl, crr})
-	} else if current_row == 0 {
-		crl, _, crr = vals_for_row(current_col, row)
-		nrl, nrc, nrr = vals_for_row(current_col, next_row)
-		return isAnySymbol([]rune{crl, crr, nrl, nrc, nrr})
-	} else if current_row == total {
-		prl, prc, prr = vals_for_row(current_col, prev_row)
-		crl, _, crr = vals_for_row(current_col, row)
-		return isAnySymbol([]rune{crl, crr, prl, prc, prr})
-	} else {
-		prl, prc, prr = vals_for_row(current_col, prev_row)
-		crl, _, crr = vals_for_row(current_col, row)
-		nrl, nrc, nrr = vals_for_row(current_col, next_row)
-		return isAnySymbol([]rune{crl, crr, prl, prc, prr, nrl, nrc, nrr})
-	}
-
-}
-
-func vals_for_row(col int, row []rune) (rune, rune, rune) {
-	// If an empty row is provided
-	if len(row) == 0 {
-		return '.', '.', '.'
-	}
-
-	if col == 0 {
-		return '.', row[col], row[col+1]
-	} else if col == len(row)-1 {
-		return row[col-1], row[col], '.'
-	} else {
-		return row[col-1], row[col], row[col+1]
-	}
 }
 
 func runeIsNumber(a rune) bool {
