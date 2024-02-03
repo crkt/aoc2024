@@ -43,17 +43,7 @@ func p1(scanner bufio.Scanner) {
 		result = append(result, row)
 	}
 	// Create list of nodes
-	nodes := []Node{}
-	for i, row := range result {
-
-		for col, t := range row {
-			var n Node
-			symbolAt := symbolNeigbours(result, i, col)
-			digit := runeIsNumber(t)
-			n = Node{symbolAt: symbolAt, value: t, digit: digit}
-			nodes = append(nodes, n)
-		}
-	}
+	nodes := getNodesFromInput(result)
 
 	number := ""
 	hasSymbol := false
@@ -90,19 +80,10 @@ func p2(scanner bufio.Scanner) {
 		result = append(result, row)
 	}
 	// Find neigbours for symbols and numbers
-	nodes := []Node{}
-	for i, row := range result {
-		for col, t := range row {
-			var n Node
-			symbolAt := symbolNeigbours(result, i, col)
-			digit := runeIsNumber(t)
-			n = Node{symbolAt: symbolAt, value: t, digit: digit}
-			nodes = append(nodes, n)
-		}
-	}
-	gearSum := 0
+	nodes := getNodesFromInput(result)
 
 	// Find digit chains that match the same symbol
+	gearSum := 0
 	number := ""
 	symbolAt := []Pair{}
 	numbersWithSymbol := make(map[Pair]string)
@@ -121,6 +102,7 @@ func p2(scanner bufio.Scanner) {
 			seenSymbols := getUniquePairs(symbolAt)
 			for _, pair := range seenSymbols {
 				existing, ok := numbersWithSymbol[pair]
+				// Other node has set this pair already, we know we have a gear
 				if ok {
 					known, _ := strconv.Atoi(existing)
 					current, _ := strconv.Atoi(number)
@@ -136,6 +118,20 @@ func p2(scanner bufio.Scanner) {
 		}
 	}
 	fmt.Println("Sum", gearSum)
+}
+
+func getNodesFromInput(input [][]rune) []Node {
+	nodes := []Node{}
+	for i, row := range input {
+		for col, t := range row {
+			var n Node
+			symbolAt := symbolNeigbours(input, i, col)
+			digit := runeIsNumber(t)
+			n = Node{symbolAt: symbolAt, value: t, digit: digit}
+			nodes = append(nodes, n)
+		}
+	}
+	return nodes
 }
 
 func getUniquePairs(pairs []Pair) []Pair {
