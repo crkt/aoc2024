@@ -11,15 +11,13 @@ import (
 // (Periods (.) do not count as a symbol.)
 
 type Node struct {
-	next     *Node
 	value    rune
 	digit    bool
 	symbolAt []Pair
 }
 
-type List struct {
-	head *Node
-	tail *Node
+type Pair struct {
+	x, y int
 }
 
 func main() {
@@ -30,8 +28,8 @@ func main() {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	p1(*scanner)
-	// p2(*scanner)
+	// p1(*scanner)
+	p2(*scanner)
 }
 
 func p1(scanner bufio.Scanner) {
@@ -45,31 +43,22 @@ func p1(scanner bufio.Scanner) {
 		result = append(result, row)
 	}
 	// Create list of nodes
-	sl := List{}
+	nodes := []Node{}
 	for i, row := range result {
 
 		for col, t := range row {
 			var n Node
 			symbolAt := symbolNeigbours(result, i, col)
 			digit := runeIsNumber(t)
-			n = Node{symbolAt: symbolAt, value: t, digit: digit, next: nil}
-			if sl.head == nil {
-				sl.head = &n
-			} else {
-				p := sl.head
-				for p.next != nil {
-					p = p.next
-				}
-				p.next = &n
-			}
+			n = Node{symbolAt: symbolAt, value: t, digit: digit}
+			nodes = append(nodes, n)
 		}
 	}
 
-	p := sl.head
 	number := ""
 	hasSymbol := false
 	sum := 0
-	for p != nil {
+	for _, p := range nodes {
 		// when digit, get the chain, and then skip until no digit
 		if p.digit {
 			number += string(p.value)
@@ -85,7 +74,6 @@ func p1(scanner bufio.Scanner) {
 			hasSymbol = false
 			number = ""
 		}
-		p = p.next
 	}
 	fmt.Println("Sum", sum)
 
@@ -101,48 +89,35 @@ func p2(scanner bufio.Scanner) {
 		}
 		result = append(result, row)
 	}
-	sl := List{}
+	// Find neigbours for symbols and numbers
+	nodes := []Node{}
 	for i, row := range result {
 		for col, t := range row {
 			var n Node
 			symbolAt := symbolNeigbours(result, i, col)
 			digit := runeIsNumber(t)
-			n = Node{symbolAt: symbolAt, value: t, digit: digit, next: nil}
-			if sl.head == nil {
-				sl.head = &n
-			} else {
-				p := sl.head
-				for p.next != nil {
-					p = p.next
-				}
-				p.next = &n
-			}
+			n = Node{symbolAt: symbolAt, value: t, digit: digit}
+			nodes = append(nodes, n)
 		}
 	}
-	p := sl.head
 	gearSum := 0
 
 	// Find digit chains that match the same symbol
 	number := ""
 	symbolAt := []Pair{}
 	numbersWithSymbol := make(map[Pair]string)
-	for p != nil {
+	for _, p := range nodes {
+
 		// While a digit, add to number
 		if p.digit {
 			number += string(p.value)
-		} else {
-			number = ""
-		}
-
-		// digit, has a symbol
-		if len(p.symbolAt) > 0 && p.digit {
-			for _, p := range p.symbolAt {
-				symbolAt = append(symbolAt, p)
+			if len(p.symbolAt) > 0 {
+				for _, p := range p.symbolAt {
+					symbolAt = append(symbolAt, p)
+				}
 			}
-		}
-
-		// Chain will break, remember number if it had any symbol
-		if p.next != nil && p.next.digit == false {
+		} else {
+			// End of number chain, check if any symbols
 			seenSymbols := getUniquePairs(symbolAt)
 			for _, pair := range seenSymbols {
 				existing, ok := numbersWithSymbol[pair]
@@ -155,12 +130,11 @@ func p2(scanner bufio.Scanner) {
 					numbersWithSymbol[pair] = number
 				}
 			}
+			// Restore 'state' after checking result
 			symbolAt = []Pair{}
+			number = ""
 		}
-
-		p = p.next
 	}
-	// 467835
 	fmt.Println("Sum", gearSum)
 }
 
@@ -188,10 +162,6 @@ func isAnySymbol(a []rune) bool {
 		}
 	}
 	return any
-}
-
-type Pair struct {
-	x, y int
 }
 
 func symbolNeigbours(mat [][]rune, row int, col int) []Pair {
