@@ -9,8 +9,10 @@ import (
 )
 
 type Card struct {
-	left  []int
-	right []int
+	number int
+	left   []int
+	right  []int
+	wins   []int
 }
 
 // [Winning numbers] | [Numbers]
@@ -32,16 +34,27 @@ func main() {
 	}
 
 	cards := []Card{}
-	for _, row := range rows {
+	cardMap := map[int]Card{}
+	for i, row := range rows {
 		numbers := strings.Split(row, ":")[1]
 		splitted := strings.Split(numbers, "|")
-		left, right := splitted[0], splitted[1]
-		trimmedLeft, trimmedRight := strings.Trim(left, " "), strings.Trim(right, " ")
+		pipeLeft, pipeRight := splitted[0], splitted[1]
+		trimmedLeft, trimmedRight := strings.Trim(pipeLeft, " "), strings.Trim(pipeRight, " ")
 		leftNumbers := strings.Split(trimmedLeft, " ")
 		rightNumbers := strings.Split(trimmedRight, " ")
-		cards = append(cards, Card{left: stringsToInts(leftNumbers), right: stringsToInts(rightNumbers)})
+		number := i + 1
+		left, right := stringsToInts(leftNumbers), stringsToInts(rightNumbers)
+		won := cardWinningCards(number, left, right)
+		card := Card{number: number, left: left, right: right, wins: won}
+		cards = append(cards, card)
+		cardMap[number] = card
 	}
 
+	//p1(cards)
+	p2(cardMap, cards)
+}
+
+func p1(cards []Card) {
 	totalWorth := 0
 	for i, card := range cards {
 		worth := cardWorth(card.left, card.right)
@@ -49,6 +62,22 @@ func main() {
 		totalWorth += worth
 	}
 	fmt.Println(totalWorth)
+}
+
+func p2(cardsMap map[int]Card, cards []Card) {
+	copies := map[int]int{}
+	for _, c := range cards {
+		copies[c.number] += 1
+		for _, w := range c.wins {
+			// We win the amount of existing copies
+			copies[w] += copies[c.number]
+		}
+	}
+	sum := 0
+	for _, c := range copies {
+		sum += c
+	}
+	fmt.Println(sum)
 }
 
 func stringsToInts(strs []string) []int {
@@ -63,6 +92,26 @@ func stringsToInts(strs []string) []int {
 	}
 
 	return ints
+}
+
+/**
+* Returns the number of copies won for this scratchcard
+ */
+func cardWinningCards(number int, left []int, right []int) []int {
+	leftSeen := map[int]bool{}
+	for _, l := range left {
+		leftSeen[l] = true
+	}
+
+	matching := []int{}
+	for _, r := range right {
+		if leftSeen[r] {
+			// Looks wierd but, you win the "next" card and never the current, so plus one
+			matching = append(matching, len(matching)+1+number)
+		}
+	}
+
+	return matching
 }
 
 func cardWorth(left []int, right []int) int {
