@@ -15,8 +15,6 @@ type Card struct {
 	wins   []int
 }
 
-// [Winning numbers] | [Numbers]
-// Each match from left side in right side, doubles the amount (1 for the first point, then 2) 4 winning = 8, n = number of winning numbers, result = n * 2 ?
 func main() {
 
 	file, err := os.Open("input.txt")
@@ -33,8 +31,8 @@ func main() {
 		rows = append(rows, row)
 	}
 
+	// [Winning numbers] | [Numbers]
 	cards := []Card{}
-	cardMap := map[int]Card{}
 	for i, row := range rows {
 		numbers := strings.Split(row, ":")[1]
 		splitted := strings.Split(numbers, "|")
@@ -47,11 +45,10 @@ func main() {
 		won := cardWinningCards(number, left, right)
 		card := Card{number: number, left: left, right: right, wins: won}
 		cards = append(cards, card)
-		cardMap[number] = card
 	}
 
 	//p1(cards)
-	p2(cardMap, cards)
+	p2(cards)
 }
 
 func p1(cards []Card) {
@@ -64,7 +61,7 @@ func p1(cards []Card) {
 	fmt.Println(totalWorth)
 }
 
-func p2(cardsMap map[int]Card, cards []Card) {
+func p2(cards []Card) {
 	copies := map[int]int{}
 	for _, c := range cards {
 		copies[c.number] += 1
